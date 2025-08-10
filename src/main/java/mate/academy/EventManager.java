@@ -2,9 +2,12 @@ package mate.academy;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class EventManager {
-    private List<EventListener> listeners = new CopyOnWriteArrayList<>();
+    private final List<EventListener> listeners = new CopyOnWriteArrayList<>();
+    private final ExecutorService executor = Executors.newCachedThreadPool();
 
     public void registerListener(EventListener listener) {
         listeners.add(listener);
@@ -15,10 +18,13 @@ public class EventManager {
     }
 
     public void notifyEvent(Event event) {
-        listeners.forEach(e -> e.onEvent(event));
+        for (EventListener listener : listeners) {
+            executor.submit(() -> listener.onEvent(event));
+        }
     }
 
     public void shutdown() {
+        executor.shutdown();
         listeners.clear();
     }
 }
